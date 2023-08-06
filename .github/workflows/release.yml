@@ -1,0 +1,42 @@
+name: Build and Release
+
+# 定义本Action需要对仓库中的文件进行写操作的权限。
+permissions:
+  contents: write
+
+# 推送的tag中以v开头则执行此action
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-release:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v3
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body_path: ./release.md
+      # 上传zip包
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./EnConvo.dmg
+          asset_name: EnConvo.dmg
+          asset_content_type: application/zip
+
+
+
